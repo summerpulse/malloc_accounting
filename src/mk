@@ -1,0 +1,3 @@
+CC=gcc
+$CC -fPIC -shared -o libmwrap.so malloc_wrapper.c -ldl
+$CC -o main main.c
