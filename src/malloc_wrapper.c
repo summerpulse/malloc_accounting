@@ -6,8 +6,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-static void* (*real_malloc)(size_t)         = NULL;
-static int (*real_open)(const char *pathname, int flags)         = NULL;
+static void*   (*real_malloc)(size_t)                                 = NULL;
+static int     (*real_open)(const char *pathname, int flags)          = NULL;
+static int     (*real_close)(int fd)                                  = NULL;
+static ssize_t (*real_read)(int fd, void *buf, size_t count)          = NULL;
+static ssize_t (*real_write)(int fd, const void *buf, size_t count)         = NULL;
+static int     (*real_ioctl)(int fd, unsigned long request, ...)         = NULL;
 
 static void init()
 {
@@ -27,6 +31,7 @@ static void init_open()
     }
     fprintf(stderr, "open_wrapper init done\n");
 }
+/***********************************************************************/
 void *malloc(size_t size)
 {
     if (!real_malloc) {
