@@ -1,6 +1,9 @@
 target_platform: AARCH64
+toolchain:
+	gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu
+	LINK: https://publishing-ie-linaro-org.s3.amazonaws.com/releases/components/toolchain/binaries/latest-7/aarch64-linux-gnu/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz?Signature=LqeD9xzimwssyUnMYWjy3q7h%2Fvw%3D&Expires=1665482696&AWSAccessKeyId=AKIAIELXV2RYNAHFUP7A
 
-todo:
+tasks:
 1 unwind without malloc
 2 interpositioning malloc
 3 rbtree for malloc/free accounting
