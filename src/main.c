@@ -7,6 +7,78 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+
+#include <execinfo.h>
+#include <errno.h>
+#include <time.h>
+#include "osal.h"
+#include "utils_dbglog.h"
+#include "osal_log.h"
+#include "malloc_accounting.h"
+#define __builtin_expect(a, b) (a)
+#define unlikely(x) __builtin_expect((x), 0)
+#define likely(x) __builtin_expect((x), 1)
+static struct rb_root malloc_tree = RB_ROOT;
+static pthread_mutex_t gLock = PTHREAD_MUTEX_INITIALIZER;
+
+static void sighandler(int signum)
+{
+    signal(signum, SIG_IGN);
+    printf("dumping malloc_tree\n");
+    struct rb_node *node;
+    pthread_mutex_lock(&gLock);
+    char filename[256] = {0};
+    int record_counter = 0;
+    sprintf(filename, "/tmp/pid%d_T%ld_malloc_tree.txt", getpid(), time(NULL));
+    FILE *fp = fopen(filename, "w");
+
+    if (!fp) {
+        printf("create %s failed: %s\n", filename, strerror(errno));
+        return;
+    }
+
+    for (node = rb_first(&malloc_tree); node; node = rb_next(node)) {
+        //printf("vaddr=%p\n", (void *)(rb_entry(node, struct mynode, node)->vaddr));
+        fprintf(fp, "{\"vaddr\":\"%p\", \"backtrace\":\"%#lx:%#lx:%#lx:%#lx:%#lx\", \"size\":%d},\n",
+                (void *)(rb_entry(node, malloc_record, node)->vaddr),
+                (rb_entry(node, malloc_record, node)->backtrace[0]),
+                (rb_entry(node, malloc_record, node)->backtrace[1]),
+                (rb_entry(node, malloc_record, node)->backtrace[2]),
+                (rb_entry(node, malloc_record, node)->backtrace[3]),
+                (rb_entry(node, malloc_record, node)->backtrace[4]),
+                rb_entry(node, malloc_record, node)->size);
+        record_counter++;
+    }
+    fclose(fp);
+    printf("%d record dump to %s\n", record_counter, filename);
+    pthread_mutex_unlock(&gLock);
+    signal(SIGUSR1, sighandler);
+}
+
+int a (){
+	
+	    signal(SIGUSR1, sighandler);
+    ret                     = malloc(size);
+    record                  = (malloc_record *)malloc(sizeof(malloc_record));
+
+    if (record) {
+        record->vaddr       = (unsigned long)ret;
+        record->size        = size;
+
+        nptrs = backtrace(buffer, 100);
+
+        if (nptrs > 5)
+            nptrs = 5;
+
+        for (int j = 0; j < nptrs; j++)
+            record->backtrace[j] = (unsigned long)buffer[j];
+
+        pthread_mutex_lock(&gLock);
+        insert_record(&malloc_tree, record);
+        pthread_mutex_unlock(&gLock);
+    }
+}
+
 int main() {
     uint8_t *p = (uint8_t*) malloc(8);
     if (!p) {
