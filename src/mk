@@ -1,3 +1,5 @@
+
 CC=gcc
-$CC -fPIC -shared -o libmwrap.so malloc_wrapper.c -ldl
+CC=aarch64-linux-gnu-gcc
+$CC -fPIC -shared -o libmwrap.so malloc_wrapper.c -ldl -I /home/skipper/FTPDownloads/libunwind/build/install/include -L /home/skipper/FTPDownloads/libunwind/build/install/lib -lunwind -lunwind-aarch64
 $CC -o main main.c

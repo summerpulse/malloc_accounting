@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -7,7 +8,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <errno.h>
+#include <unistd.h>
+#include <linux/random.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+/*
 #include <execinfo.h>
 #include <errno.h>
 #include <time.h>
@@ -57,7 +66,7 @@ static void sighandler(int signum)
 
 int a (){
 	
-	    signal(SIGUSR1, sighandler);
+	signal(SIGUSR1, sighandler);
     ret                     = malloc(size);
     record                  = (malloc_record *)malloc(sizeof(malloc_record));
 
@@ -78,8 +87,10 @@ int a (){
         pthread_mutex_unlock(&gLock);
     }
 }
-
+*/
 int main() {
+    int fd;
+    
     uint8_t *p = (uint8_t*) malloc(8);
     if (!p) {
         printf("malloc fail\n");
@@ -87,7 +98,7 @@ int main() {
     }
     memset(p, 0, 8);
 
-    int fd = open("/dev/random", O_RDONLY);
+    fd = open("test.txt", O_RDONLY);
     printf("fd=%d\n", fd);
     if (fd >= 0) {
         ssize_t ret = read(fd, p, 8);
@@ -97,20 +108,40 @@ int main() {
                     *(p + 0), *(p + 1), *(p + 2), *(p + 3),
                     *(p + 4), *(p + 5), *(p + 6), *(p + 7));
         }
-        close(fd);
+        //close(fd);
     }
     free(p);
+	
 
-    if (fd = open("/dev/random", O_RDONLY) < 0) {
-        perror("open");
-        return 1;
-    }
+    //if (fd = open("/dev/random", O_RDONLY) < 0) {
+    //    perror("open");
+    //    return 1;
+    //}
     int n = 16;
+	printf("open /dev/random gets %d\n", fd);
+	
+	/*
+    if (fcntl(fd, i, filePath) != -1)
+    {
+        printf("fcntl with %d get:  %s\n", i, filePath);
+    } else
+		printf("fcntl with %d fail: %s\n", i, strerror(errno));
+	
+	int entropy;
+	if(ioctl(fd, RNDGETENTCNT, &entropy)<0) {
+		perror("ioctl1");
+        return 1;
+	} else
+		printf("entropy=%#x\n", entropy);
+	*/
     if (ioctl(fd, FIONREAD, &n) < 0) { //file descriptor, call, unsigned int
-        perror("ioctl");
+        perror("ioctl2");
         return 1;
     }
     printf("%d bytes available for reading.\n", n);
 
+	while (1) {
+		usleep(100 * 1000);
+	}
     return 0;
 }
